@@ -1,1 +1,459 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-LIS ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</title>
+    
+    <!-- นำเข้า Google Fonts: Sarabun (ใช้เป็น Fallback ที่ดีที่สุดสำหรับ TH Sarabun PSK บนเว็บ) -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- นำเข้า Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- นำเข้า SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- นำเข้า Tailwind CSS ผ่าน CDN พร้อมตั้งค่า Theme แบบ Modern-Formal -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-navy': '#1e3a8a', // สีน้ำเงินกรมท่า ทางการ
+                        'brand-light': '#f8fafc',
+                    },
+                    fontFamily: {
+                        'sarabun': ['Sarabun', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .timeline-line { position: absolute; top: 24px; left: 0; width: 100%; height: 4px; background: #e2e8f0; z-index: -1; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
 
+    <!-- Navbar -->
+    <nav class="bg-brand-navy text-white shadow-md w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('login')">
+                <i class="fa-solid fa-building-columns text-2xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">e-LIS</h1>
+                    <p class="text-xs text-blue-200">ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</p>
+                </div>
+            </div>
+            <div id="nav-user" class="hidden text-sm font-medium"></div>
+        </div>
+    </nav>
+
+    <!-- พื้นที่แสดงผลเนื้อหาหลัก -->
+    <main id="app-root" class="flex-grow flex items-center justify-center p-4">
+        <!-- เนื้อหาจะถูก JS วางที่นี่ -->
+    </main>
+
+    <script>
+        // ==========================================
+        // ส่วนที่ 1: ระบบจัดการหน้าเว็บ (Routing)
+        // ==========================================
+        const root = document.getElementById('app-root');
+        const navUser = document.getElementById('nav-user');
+
+        window.navigate = (page) => {
+            root.innerHTML = ''; // เคลียร์หน้าจอเดิม
+            navUser.innerHTML = '';
+            navUser.classList.add('hidden');
+
+            if (page === 'login') root.innerHTML = renderLogin();
+            else if (page === 'borrower-dash') {
+                navUser.innerHTML = '<i class="fa-solid fa-circle-user"></i> ผู้กู้: คุณสมชาย';
+                navUser.classList.remove('hidden');
+                root.innerHTML = renderBorrowerDashboard();
+            }
+            else if (page === 'staff-dash') {
+                navUser.innerHTML = '<i class="fa-solid fa-user-tie"></i> เจ้าหน้าที่: แอดมิน';
+                navUser.classList.remove('hidden');
+                root.innerHTML = renderStaffDashboard();
+            }
+            else if (page === 'create-loan') {
+                navUser.innerHTML = '<i class="fa-solid fa-user-tie"></i> เจ้าหน้าที่: แอดมิน';
+                navUser.classList.remove('hidden');
+                root.innerHTML = renderCreateLoan();
+            }
+        };
+
+        // ==========================================
+        // ส่วนที่ 2: ฟังก์ชันสำหรับปุ่มต่างๆ และ SweetAlert2
+        // ==========================================
+        window.handleGoogleLogin = () => {
+            Swal.fire({
+                icon: 'success',
+                title: 'เชื่อมต่อ Google สำเร็จ',
+                text: 'กำลังพาท่านไปหน้าแดชบอร์ดผู้กู้...',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => navigate('borrower-dash'));
+        };
+
+        window.handleApplyLoan = () => {
+            Swal.fire({
+                icon: 'info',
+                title: 'ข้อมูลส่วนตัวยังไม่สมบูรณ์',
+                text: 'คุณเคยกดข้ามการกรอกข้อมูล กรุณากรอกข้อมูลส่วนตัวก่อนยื่นสินเชื่อ',
+                confirmButtonText: 'ไปกรอกข้อมูล',
+                confirmButtonColor: '#1e3a8a',
+                showCancelButton: true,
+                cancelButtonText: 'ยกเลิก'
+            });
+        };
+
+        window.handleCreateLoanSubmit = (e) => {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'success',
+                title: 'สร้างสินเชื่อสำเร็จ!',
+                text: 'รหัสสินเชื่อ: LN-AUTO-002 ถูกเพิ่มลงในระบบและเปิดให้ผู้กู้เห็นแล้ว',
+                confirmButtonColor: '#1e3a8a'
+            }).then(() => navigate('staff-dash'));
+        };
+
+        window.addCustomField = () => {
+            const container = document.getElementById('custom-fields-container');
+            const id = Date.now();
+            const html = `
+                <div id="field-${id}" class="flex gap-3 items-center p-3 border border-gray-200 rounded bg-white shadow-sm mt-2">
+                    <i class="fa-solid fa-grip-vertical text-gray-400"></i>
+                    <input type="text" placeholder="ระบุคำถาม หรือ ข้อมูลที่ต้องการ" class="flex-1 border p-2 rounded focus:outline-brand-navy focus:ring-1">
+                    <select class="border p-2 rounded bg-gray-50 outline-none">
+                        <option value="text">กรอกเอง (ข้อความ)</option>
+                        <option value="dropdown">ดรอปดาวน์</option>
+                        <option value="file">อัพโหลดรูป/ไฟล์</option>
+                    </select>
+                    <button type="button" onclick="document.getElementById('field-${id}').remove()" class="text-red-500 hover:bg-red-50 p-2 rounded">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        };
+
+        // ==========================================
+        // ส่วนที่ 3: HTML Templates (Views)
+        // ==========================================
+
+        function renderLogin() {
+            return `
+            <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border-t-4 border-brand-navy animate-fade-in">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">เข้าสู่ระบบ (e-LIS)</h2>
+                    <p class="text-gray-500 text-sm mt-1">กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
+                </div>
+                <form class="space-y-4" onsubmit="event.preventDefault(); window.handleGoogleLogin();">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">ชื่อผู้ใช้</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-user absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-brand-navy focus:ring-1 focus:ring-brand-navy" placeholder="Username">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">รหัสผ่าน</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400"></i>
+                            <input type="password" class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-brand-navy focus:ring-1 focus:ring-brand-navy" placeholder="Password">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-navy text-white py-2.5 rounded-lg font-bold hover:bg-blue-900 transition shadow-md">เข้าสู่ระบบ</button>
+                </form>
+                
+                <div class="flex items-center my-6">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="mx-4 text-gray-400 text-sm">หรือ</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="handleGoogleLogin()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2 shadow-sm">
+                        <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png" class="w-5 h-5" alt="Google">
+                        ลงทะเบียน / เข้าสู่ระบบด้วย Google
+                    </button>
+                    <button onclick="navigate('staff-dash')" class="w-full bg-slate-800 text-white py-2.5 rounded-lg font-medium hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-user-shield"></i> สำหรับเจ้าหน้าที่
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        function renderBorrowerDashboard() {
+            return `
+            <div class="w-full max-w-5xl self-start mt-6 animate-fade-in">
+                <!-- ส่วนที่ 1: สินเชื่อที่เปิดให้ยื่น -->
+                <h2 class="text-2xl font-bold text-brand-navy mb-4 border-b-2 border-brand-navy pb-2 inline-block">
+                    <i class="fa-solid fa-hand-holding-dollar mr-2"></i> สินเชื่อที่สามารถยื่นได้
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    
+                    <!-- การ์ด 1: ยื่นได้ปกติ -->
+                    <div class="bg-white p-5 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">เปิดรับยื่น</div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">สินเชื่อตั้งตัว (SME)</h3>
+                        <p class="text-sm text-gray-500 mb-3">เลขที่: LN66-001</p>
+                        <div class="bg-blue-50 p-3 rounded mb-4">
+                            <p class="text-brand-navy font-bold text-lg text-center">วงเงิน: 100,000 บาท</p>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2"><i class="fa-regular fa-clock"></i> หมดเขต: 30 ส.ค. 2569</p>
+                        <button onclick="handleApplyLoan()" class="w-full bg-brand-navy text-white py-2 rounded font-bold hover:bg-blue-800 transition">ยื่นสินเชื่อ</button>
+                    </div>
+
+                    <!-- การ์ด 2: ยังไม่ถึงเวลา -->
+                    <div class="bg-gray-50 p-5 rounded-xl shadow border border-gray-200 relative opacity-80">
+                        <div class="absolute top-0 right-0 bg-gray-400 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">เร็วๆ นี้</div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">สินเชื่อฉุกเฉิน</h3>
+                        <p class="text-sm text-gray-500 mb-3">เลขที่: LN66-002</p>
+                        <div class="bg-gray-200 p-3 rounded mb-4">
+                            <p class="text-gray-600 font-bold text-lg text-center">วงเงิน: 50,000 บาท</p>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2"><i class="fa-regular fa-calendar"></i> เปิดรับ: 1 ก.ย. 2569</p>
+                        <button disabled class="w-full bg-gray-300 text-gray-500 py-2 rounded font-bold cursor-not-allowed">ยังไม่ถึงระยะเวลา</button>
+                    </div>
+
+                    <!-- การ์ด 3: หมดเขต (จะหายไปใน 24 ชม) -->
+                    <div class="bg-white p-5 rounded-xl shadow border border-red-100 relative opacity-60 grayscale">
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">สินเชื่อเพื่อการศึกษา</h3>
+                        <p class="text-sm text-gray-500 mb-3">เลขที่: LN66-003</p>
+                        <div class="bg-gray-100 p-3 rounded mb-4">
+                            <p class="text-gray-500 font-bold text-lg text-center">วงเงิน: 30,000 บาท</p>
+                        </div>
+                        <p class="text-sm text-red-500 mb-2 font-bold"><i class="fa-solid fa-circle-exclamation"></i> หมดเขตแล้ว</p>
+                        <button disabled class="w-full bg-gray-400 text-white py-2 rounded font-bold cursor-not-allowed">หมดเขตการยื่นสินเชื่อ</button>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 2: ประวัติและสถานะการยื่น (Status Timeline) -->
+                <h2 class="text-2xl font-bold text-brand-navy mb-4 border-b-2 border-brand-navy pb-2 inline-block">
+                    <i class="fa-solid fa-clock-rotate-left mr-2"></i> สถานะคำขอสินเชื่อปัจจุบัน
+                </h2>
+                <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h3 class="text-lg font-bold">สินเชื่อเพื่อที่อยู่อาศัย (LN-HOME-01)</h3>
+                            <p class="text-sm text-gray-500">ยื่นเมื่อ: 10 ก.ค. 2569</p>
+                        </div>
+                        <span class="bg-red-100 text-red-700 px-4 py-1 rounded-full text-sm font-bold border border-red-200">
+                            <i class="fa-solid fa-triangle-exclamation"></i> ล่าช้ากว่ากำหนด
+                        </span>
+                    </div>
+
+                    <!-- Timeline UI แบบ 4 ขั้นตอน (มี SLA Breach ในขั้นตอน 3) -->
+                    <div class="relative flex justify-between w-full max-w-3xl mx-auto mt-6">
+                        <div class="timeline-line"></div>
+                        
+                        <!-- Step 1: Done -->
+                        <div class="flex flex-col items-center relative z-10 w-1/4">
+                            <div class="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center text-xl shadow-md border-4 border-white"><i class="fa-solid fa-paper-plane"></i></div>
+                            <p class="text-sm font-bold mt-2 text-center text-gray-800">ส่งคำขอแล้ว</p>
+                        </div>
+                        
+                        <!-- Step 2: Done -->
+                        <div class="flex flex-col items-center relative z-10 w-1/4">
+                            <div class="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center text-xl shadow-md border-4 border-white"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <p class="text-sm font-bold mt-2 text-center text-gray-800">กำลังตรวจสอบ</p>
+                        </div>
+
+                        <!-- Step 3: SLA Breached (กากบาทแดงตามที่บรีฟ) -->
+                        <div class="flex flex-col items-center relative z-10 w-1/4">
+                            <div class="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-md border-4 border-white animate-pulse"><i class="fa-solid fa-xmark"></i></div>
+                            <p class="text-sm font-bold mt-2 text-center text-red-600">ตรวจสอบเสร็จสิ้น</p>
+                            <p class="text-xs text-red-500 font-bold">เกินกำหนด (15 ก.ค.)</p>
+                            <p class="text-xs text-gray-500 mt-1 text-center w-full">รอเจ้าหน้าที่ตรวจสอบอีกครั้ง</p>
+                        </div>
+
+                        <!-- Step 4: Pending -->
+                        <div class="flex flex-col items-center relative z-10 w-1/4">
+                            <div class="w-12 h-12 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xl shadow-inner border-4 border-white"><i class="fa-solid fa-check-to-slot"></i></div>
+                            <p class="text-sm font-bold mt-2 text-center text-gray-400">ผลอนุมัติ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderStaffDashboard() {
+            return `
+            <div class="w-full max-w-5xl self-start mt-6 animate-fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-brand-navy"><i class="fa-solid fa-users-gear mr-2"></i> แดชบอร์ดเจ้าหน้าที่</h2>
+                    <button onclick="navigate('create-loan')" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-700 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> สร้างสินเชื่อใหม่
+                    </button>
+                </div>
+
+                <!-- แผงเครื่องมือ กรองข้อมูล & Export -->
+                <div class="bg-white p-4 rounded-t-xl border-b flex flex-wrap gap-4 items-end justify-between shadow-sm">
+                    <div class="flex gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">สถานะ</label>
+                            <select class="border p-2 rounded text-sm outline-none">
+                                <option>รออัพเดทสถานะ</option>
+                                <option>กำลังตรวจสอบ</option>
+                                <option>อนุมัติแล้ว</option>
+                                <option>รอตรวจสอบอีกครั้ง (เลยกำหนด)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">เลือกเดือน/ปี</label>
+                            <input type="month" class="border p-2 rounded text-sm outline-none">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded text-sm font-bold hover:bg-red-100"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+                        <button class="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-100"><i class="fa-solid fa-file-word"></i> Export Word</button>
+                    </div>
+                </div>
+
+                <!-- ตารางข้อมูล -->
+                <div class="bg-white shadow-sm rounded-b-xl overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 border-b text-sm">
+                                <th class="p-4 font-bold">เลขที่ใบคำขอ</th>
+                                <th class="p-4 font-bold">ชื่อผู้กู้</th>
+                                <th class="p-4 font-bold">สินเชื่อ</th>
+                                <th class="p-4 font-bold">วันที่ยื่น</th>
+                                <th class="p-4 font-bold">สถานะปัจุบัน</th>
+                                <th class="p-4 font-bold text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-4">REQ-001</td>
+                                <td class="p-4">สมชาย ใจดี</td>
+                                <td class="p-4">LN-HOME-01</td>
+                                <td class="p-4">10 ก.ค. 2569</td>
+                                <td class="p-4"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">เลยกำหนด (ขั้นที่ 3)</span></td>
+                                <td class="p-4 text-center">
+                                    <button class="bg-brand-navy text-white px-3 py-1 rounded text-xs hover:bg-blue-800">ตรวจสอบอีกครั้ง</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4">REQ-002</td>
+                                <td class="p-4">สมหญิง รักการเรียน</td>
+                                <td class="p-4">LN66-003</td>
+                                <td class="p-4">12 ก.ค. 2569</td>
+                                <td class="p-4"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold"><i class="fa-solid fa-clock"></i> กำลังตรวจสอบ</span></td>
+                                <td class="p-4 text-center">
+                                    <button class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300">อัพเดทสถานะ</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        function renderCreateLoan() {
+            return `
+            <div class="w-full max-w-4xl self-start mt-4 mb-10 animate-fade-in">
+                <button onclick="navigate('staff-dash')" class="mb-4 text-gray-500 hover:text-brand-navy font-bold">
+                    <i class="fa-solid fa-arrow-left"></i> กลับไปแดชบอร์ด
+                </button>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-green-600">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
+                        <i class="fa-solid fa-file-circle-plus text-green-600 mr-2"></i> สร้างรายการสินเชื่อใหม่
+                    </h2>
+                    
+                    <form onsubmit="window.handleCreateLoanSubmit(event)" class="space-y-6">
+                        <!-- 1. ข้อมูลพื้นฐาน -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-1">1. ชื่อสินเชื่อ <span class="text-red-500">*</span></label>
+                                <input type="text" required class="w-full border border-gray-300 p-2.5 rounded-lg focus:outline-brand-navy" placeholder="เช่น สินเชื่อเพื่อการเกษตร">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-1">2. รหัสสินเชื่อ</label>
+                                <input type="text" value="LN-AUTO-002" class="w-full border border-gray-200 p-2.5 rounded-lg bg-gray-50 text-gray-500" readonly>
+                                <p class="text-xs text-gray-400 mt-1">รันอัตโนมัติจากระบบ (สามารถตั้งค่าได้ในเมนูตั้งค่า)</p>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-gray-700 mb-1">3. วงเงินอนุมัติ (บาท) <span class="text-red-500">*</span></label>
+                                <input type="number" required class="w-full border border-gray-300 p-2.5 rounded-lg focus:outline-brand-navy" placeholder="เช่น 50000">
+                            </div>
+                        </div>
+
+                        <!-- 2. รายละเอียดและเงื่อนไข -->
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">4. รายละเอียดสินเชื่อ</label>
+                            <textarea class="w-full border border-gray-300 p-3 rounded-lg focus:outline-brand-navy h-20"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">5. เงื่อนไขการพิจารณา</label>
+                            <textarea class="w-full border border-gray-300 p-3 rounded-lg focus:outline-brand-navy h-20" placeholder="ระบุเอกสารที่ต้องใช้ หรือคุณสมบัติผู้กู้"></textarea>
+                        </div>
+
+                        <!-- 3. กำหนดเวลา -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <div>
+                                <label class="block font-bold text-green-700 mb-1">6. วันที่/เวลา เปิดรับยื่น <span class="text-red-500">*</span></label>
+                                <input type="datetime-local" required class="w-full border border-gray-300 p-2.5 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-red-700 mb-1">7. วันที่/เวลา หมดเขต <span class="text-red-500">*</span></label>
+                                <input type="datetime-local" required class="w-full border border-gray-300 p-2.5 rounded-lg">
+                            </div>
+                        </div>
+
+                        <!-- 4. อัพโหลดเอกสาร -->
+                        <div class="bg-blue-50 border border-blue-200 border-dashed p-5 rounded-lg">
+                            <label class="block font-bold text-brand-navy mb-2">8. อัพโหลด PDF หนังสือขออนุญาตเพิ่มรายการสินเชื่อ</label>
+                            <div class="flex flex-col md:flex-row gap-4 items-center">
+                                <input type="file" accept=".pdf" class="flex-1 bg-white border p-2 rounded w-full">
+                                <a href="https://drive.google.com/file/d/13mCe6T6Q4pNbd3vrX6t3aYcYlAS6QrxC/view?usp=drivesdk" target="_blank" class="bg-white text-brand-navy border border-brand-navy px-4 py-2.5 rounded-lg hover:bg-blue-50 font-bold whitespace-nowrap text-sm shadow-sm">
+                                    <i class="fa-solid fa-download mr-1"></i> โหลดแบบฟอร์ม
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 5. ข้อมูลเพิ่มเติม (Dynamic Form) -->
+                        <div class="border-t pt-6 mt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3">9. ข้อมูลที่ต้องการเพิ่มเติมจากผู้กู้ (Custom Fields)</h3>
+                            
+                            <label class="flex items-center gap-3 mb-4 bg-gray-50 p-3 rounded border border-gray-200 cursor-pointer hover:bg-gray-100 transition">
+                                <input type="checkbox" class="w-5 h-5 accent-brand-navy rounded">
+                                <span class="font-bold text-gray-700"><i class="fa-solid fa-location-dot text-red-500 mr-1"></i> บังคับให้ผู้กู้ระบุพิกัด GPS ปัจจุบัน (อนุญาต Location Map)</span>
+                            </label>
+
+                            <div id="custom-fields-container" class="space-y-2 mb-4">
+                                <!-- ฟิลด์ที่เพิ่มจะมาโผล่ตรงนี้ -->
+                            </div>
+
+                            <button type="button" onclick="addCustomField()" class="text-brand-navy font-bold hover:underline bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
+                                <i class="fa-solid fa-plus"></i> เพิ่มคำถาม/ฟิลด์ข้อมูล
+                            </button>
+                        </div>
+
+                        <!-- ปุ่ม Submit -->
+                        <div class="border-t pt-6 mt-6">
+                            <button type="submit" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-green-700 transition shadow-lg flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-check-circle text-xl"></i> สร้างสินเชื่อลงระบบ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+        }
+
+        // เริ่มต้นการทำงานด้วยการแสดงหน้า Login
+        navigate('login');
+    </script>
+</body>
+</html>

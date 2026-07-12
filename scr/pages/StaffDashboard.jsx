@@ -1,116 +1,112 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 
-export default function StaffDashboard() {
-  const [customFields, setCustomFields] = useState([]);
-
-  const addCustomField = () => {
-    setCustomFields([...customFields, { type: 'text', question: '' }]);
-  };
+const StaffDashboard = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const handleCreateLoan = (e) => {
     e.preventDefault();
-    Swal.fire({
-      title: 'ยืนยันการสร้างสินเชื่อ?',
-      text: "ระบบจะเปิดให้ยื่นกู้ตามวันและเวลาที่กำหนด",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#1d4ed8',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'สร้างสินเชื่อ',
-      cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire('สำเร็จ!', 'เพิ่มสินเชื่อลงในระบบ e-LIS เรียบร้อยแล้ว', 'success');
-        // Logic ส่งข้อมูลไป API (Node.js/GAS)
-      }
-    });
+    Swal.fire('สำเร็จ', 'สร้างรายการสินเชื่อใหม่เรียบร้อยแล้ว', 'success');
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-900">
-        <h2 className="text-2xl font-bold mb-6 text-blue-900"><i className="fas fa-plus-circle"></i> สร้างสินเชื่อใหม่</h2>
-        
-        <form onSubmit={handleCreateLoan} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-bold">ชื่อสินเชื่อ</label>
-              <input type="text" className="w-full border p-2 rounded" required />
-            </div>
-            <div>
-              <label className="block font-bold">รหัสสินเชื่อ (Auto-Run)</label>
-              <input type="text" defaultValue="LN-2026-0001" className="w-full border p-2 rounded bg-gray-100" readOnly />
-            </div>
-          </div>
+    <div className="min-h-screen flex bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-64 bg-blue-900 text-white flex flex-col">
+        <div className="p-6 text-center text-3xl font-bold border-b border-blue-800">e-LIS Staff</div>
+        <nav className="flex-1 p-4 space-y-2">
+          <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left px-4 py-2 rounded text-xl ${activeTab === 'dashboard' ? 'bg-blue-800' : 'hover:bg-blue-800'}`}>
+            <i className="fas fa-chart-line w-6"></i> ภาพรวมระบบ
+          </button>
+          <button onClick={() => setActiveTab('add')} className={`w-full text-left px-4 py-2 rounded text-xl ${activeTab === 'add' ? 'bg-blue-800' : 'hover:bg-blue-800'}`}>
+            <i className="fas fa-plus-circle w-6"></i> เพิ่มสินเชื่อ
+          </button>
+        </nav>
+      </div>
 
+      {/* Content */}
+      <div className="flex-1 p-8 overflow-y-auto">
+        {activeTab === 'dashboard' && (
           <div>
-            <label className="block font-bold">วงเงินสูงสุด (บาท)</label>
-            <input type="number" className="w-full border p-2 rounded" required />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-bold">วันที่เปิดรับยื่นสินเชื่อ</label>
-              <input type="datetime-local" className="w-full border p-2 rounded" required />
-            </div>
-            <div>
-              <label className="block font-bold">วันหมดเขตยื่นสินเชื่อ</label>
-              <input type="datetime-local" className="w-full border p-2 rounded" required />
-            </div>
-          </div>
-
-          <div className="bg-blue-50 p-4 rounded border border-blue-200">
-            <label className="block font-bold text-blue-900">หนังสือขออนุญาตการเพิ่มรายการสินเชื่อ</label>
-            <div className="flex items-center gap-4 mt-2">
-              <a href="https://drive.google.com/file/d/13mCe6T6Q4pNbd3vrX6t3aYcYlAS6QrxC/view?usp=drivesdk" 
-                 target="_blank" rel="noreferrer"
-                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
-                <i className="fas fa-download"></i> ดาวน์โหลดแบบฟอร์ม
-              </a>
-              <input type="file" accept=".pdf" className="border p-1 rounded w-full" required />
-            </div>
-          </div>
-
-          <hr className="my-6" />
-
-          {/* ส่วน Dynamic Fields สไตล์ Google Form */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold"><i className="fas fa-list"></i> ข้อมูลที่ต้องการเพิ่มเติมจากผู้กู้</h3>
-              <button type="button" onClick={addCustomField} className="bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200">
-                + เพิ่มคำถาม
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-800">แดชบอร์ดเจ้าหน้าที่</h2>
+              <button className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
+                <i className="fas fa-file-export mr-2"></i> ส่งออก PDF/Word
               </button>
             </div>
-
-            {/* Checkbox มาตรฐาน */}
-            <div className="mb-4 flex items-center gap-2">
-              <input type="checkbox" id="requireGPS" className="w-5 h-5" />
-              <label htmlFor="requireGPS" className="font-bold">ต้องการพิกัด GPS ปัจจุบัน (บังคับขออนุญาตตำแหน่ง)</label>
+            {/* ตารางแสดงรายการที่รอตรวจสอบ/อนุมัติ (Mockup) */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-xl text-gray-500">ตารางแสดงรายการยื่นขอสินเชื่อ (รอตรวจสอบอีกครั้ง, กำลังตรวจสอบ, อนุมัติ...)</p>
             </div>
+          </div>
+        )}
 
-            {/* คำถามที่เพิ่มเอง */}
-            {customFields.map((field, index) => (
-              <div key={index} className="flex gap-2 items-center mb-2 bg-gray-50 p-3 rounded border">
-                <input type="text" placeholder="ระบุคำถาม..." className="flex-1 border p-2 rounded" />
-                <select className="border p-2 rounded bg-white">
-                  <option value="text">กรอกข้อความสั้น</option>
-                  <option value="textarea">กรอกข้อความยาว</option>
-                  <option value="dropdown">ดรอปดาวน์</option>
-                  <option value="upload">อัพโหลดรูปภาพ</option>
-                </select>
-                <button type="button" onClick={() => setCustomFields(customFields.filter((_, i) => i !== index))} className="text-red-500 px-2">
-                  <i className="fas fa-trash"></i>
+        {activeTab === 'add' && (
+          <div className="bg-white p-8 rounded-lg shadow max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">สร้างรายการสินเชื่อใหม่</h2>
+            <form onSubmit={handleCreateLoan} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 text-lg">ชื่อสินเชื่อ</label>
+                  <input type="text" required className="w-full border p-2 rounded" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-lg">รหัสสินเชื่อ</label>
+                  <input type="text" placeholder="เว้นว่างเพื่อรันอัตโนมัติ" className="w-full border p-2 rounded" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-lg">วงเงิน (บาท)</label>
+                  <input type="number" required className="w-full border p-2 rounded" />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-lg">รายละเอียดสินเชื่อ</label>
+                <textarea className="w-full border p-2 rounded" rows="3"></textarea>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 text-lg">วันที่เริ่มยื่นสินเชื่อได้</label>
+                  <input type="datetime-local" className="w-full border p-2 rounded" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-lg">วันที่หมดเขตยื่นสินเชื่อ</label>
+                  <input type="datetime-local" className="w-full border p-2 rounded" />
+                </div>
+              </div>
+
+              <div className="border border-blue-100 bg-blue-50 p-4 rounded-lg">
+                <label className="block text-gray-800 font-bold text-xl mb-2">เอกสารขออนุญาต</label>
+                <p className="text-gray-600 mb-2">อัพโหลด PDF หนังสือขออนุญาตการเพิ่มรายการสินเชื่อลงในระบบ e-LIS</p>
+                <input type="file" accept="application/pdf" className="mb-2 w-full" />
+                <a href="https://drive.google.com/file/d/13mCe6T6Q4pNbd3vrX6t3aYcYlAS6QrxC/view?usp=drivesdk" target="_blank" rel="noreferrer" className="text-blue-600 underline">
+                  <i className="fas fa-download mr-1"></i> ดาวน์โหลดแบบฟอร์ม
+                </a>
+              </div>
+
+              <div className="border border-gray-200 p-4 rounded-lg">
+                <label className="block text-gray-800 font-bold text-xl mb-2">ข้อมูลที่ต้องการเพิ่มเติมจากผู้กู้</label>
+                <div className="flex items-center gap-2 mb-2">
+                  <input type="checkbox" id="gps" />
+                  <label htmlFor="gps" className="text-lg">พิกัด GPS ปัจจุบัน</label>
+                </div>
+                <button type="button" className="text-blue-600 hover:underline">
+                  <i className="fas fa-plus mr-1"></i> เพิ่มคำถามแบบกำหนดเอง (Dropdown, อัพโหลดรูป, ข้อความ)
                 </button>
               </div>
-            ))}
-          </div>
 
-          <button type="submit" className="w-full bg-blue-900 text-white py-3 rounded-lg font-bold text-xl hover:bg-blue-800 transition shadow-lg mt-6">
-            สร้างสินเชื่อ
-          </button>
-        </form>
+              <div className="pt-4 text-right">
+                <button type="submit" className="bg-blue-900 text-white px-8 py-3 rounded-lg text-xl hover:bg-blue-800 transition">
+                  สร้างสินเชื่อ
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default StaffDashboard;

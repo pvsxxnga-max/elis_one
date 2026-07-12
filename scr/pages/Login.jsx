@@ -1,69 +1,61 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
-export default function Login() {
+const Login = () => {
+  const navigate = useNavigate();
+
   const handleGoogleLogin = () => {
     Swal.fire({
-      title: 'กำลังเชื่อมต่อบัญชี Google',
-      text: 'กรุณารอสักครู่...',
-      icon: 'info',
-      showConfirmButton: false,
-      timer: 1500
-    }).then(() => {
-      Swal.fire({
-        title: 'เชื่อมต่อสำเร็จ!',
-        text: 'คุณต้องการกรอกข้อมูลประวัติส่วนตัวเลยหรือไม่? (หากข้ามต้องกรอกก่อนยื่นสินเชื่อ)',
-        icon: 'success',
-        showCancelButton: true,
-        confirmButtonText: 'กรอกข้อมูลเลย',
-        cancelButtonText: 'ข้ามไปก่อน',
-        confirmButtonColor: '#1d4ed8',
-        cancelButtonColor: '#6b7280'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = '/profile-setup';
-        } else {
-          window.location.href = '/borrower-dashboard';
-        }
-      });
+      title: 'ต้องการกรอกข้อมูลส่วนตัวหรือไม่?',
+      text: "คุณสามารถข้ามขั้นตอนนี้และกรอกภายหลังเมื่อยื่นสินเชื่อได้",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'กรอกข้อมูลเลย',
+      cancelButtonText: 'ข้ามไปก่อน',
+      confirmButtonColor: '#1d4ed8'
+    }).then((result) => {
+      // ไม่ว่าจะกรอกหรือข้าม ก็จะพาไปหน้า Dashboard (สมมติว่าถ้ากดกรอกข้อมูล จะมีฟอร์มขึ้นมาก่อน)
+      navigate('/borrower');
     });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border-t-4 border-blue-800">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-900">e-LIS</h1>
-          <p className="text-gray-500">ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</p>
+      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border-t-8 border-blue-900">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800">e-LIS</h1>
+          <p className="text-xl text-gray-500">ระบบสารสนเทศเพื่อการบริหารสินเชื่อ</p>
         </div>
         
         <form className="space-y-4">
           <div>
-            <label className="block text-gray-700">ชื่อผู้ใช้งาน</label>
-            <input type="text" className="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-gray-700 text-lg">ชื่อผู้ใช้งาน</label>
+            <input type="text" className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800" />
           </div>
           <div>
-            <label className="block text-gray-700">รหัสผ่าน</label>
-            <input type="password" className="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-gray-700 text-lg">รหัสผ่าน</label>
+            <input type="password" className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800" />
           </div>
-          
-          <button type="button" className="w-full bg-blue-800 text-white py-2 rounded-md hover:bg-blue-900 transition">
+          <button type="button" onClick={() => navigate('/borrower')} className="w-full bg-blue-900 text-white py-2 rounded-md text-xl hover:bg-blue-800 transition">
             เข้าสู่ระบบ
           </button>
         </form>
 
-        <div className="mt-6 flex flex-col space-y-3">
-          <button onClick={handleGoogleLogin} className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition flex items-center justify-center gap-2">
-            <i className="fab fa-google"></i> ลงทะเบียน / เข้าสู่ระบบด้วย Google
+        <div className="mt-6">
+          <button onClick={handleGoogleLogin} className="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-md text-xl flex items-center justify-center gap-2 hover:bg-gray-50 transition">
+            <i className="fab fa-google text-red-500"></i> ลงทะเบียนด้วย Google
           </button>
-          
-          <hr className="my-4" />
-          
-          <button onClick={() => window.location.href='/staff-login'} className="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition">
-            <i className="fas fa-user-shield"></i> สำหรับเจ้าหน้าที่
+        </div>
+
+        <div className="mt-8 pt-4 border-t text-center">
+          <button onClick={() => navigate('/staff')} className="text-blue-800 hover:underline text-lg">
+            <i className="fas fa-user-tie mr-1"></i> สำหรับเจ้าหน้าที่
           </button>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Login;

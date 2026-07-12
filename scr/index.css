@@ -5,16 +5,18 @@
 @font-face {
   font-family: 'THSarabunPSK';
   src: url('/fonts/THSarabunNew.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
 body {
   font-family: 'THSarabunPSK', sans-serif;
-  font-size: 20px; /* ฟอนต์ Sarabun ต้องใช้ขนาดใหญ่กว่าปกติเล็กน้อยให้อ่านง่าย */
-  background-color: #f3f4f6; /* Light Gray */
+  font-size: 20px; /* ปรับขนาดพื้นฐานให้ฟอนต์ Sarabun อ่านง่าย */
+  background-color: #f3f4f6;
   color: #1f2937;
 }
 
-/* ปรับแต่ง SweetAlert2 ให้เข้ากับฟอนต์ระบบ */
+/* SweetAlert2 Custom Font */
 .swal2-popup {
   font-family: 'THSarabunPSK', sans-serif !important;
 }

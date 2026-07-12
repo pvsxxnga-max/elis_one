@@ -1,11 +1,18 @@
 import React from 'react';
-import Login from './pages/Login'; // ตรวจสอบว่าสร้างไฟล์ Login.jsx ในโฟลเดอร์ pages แล้ว
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './pages/Login';
+import BorrowerDashboard from './pages/BorrowerDashboard';
+import StaffDashboard from './pages/StaffDashboard';
 
 function App() {
   return (
-    <div className="App">
-      <Login />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/borrower" element={<BorrowerDashboard />} />
+        <Route path="/staff" element={<StaffDashboard />} />
+      </Routes>
+    </Router>
   );
 }
 
